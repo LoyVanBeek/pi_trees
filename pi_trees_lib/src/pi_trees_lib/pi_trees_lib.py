@@ -22,6 +22,7 @@
 """
 
 import string
+import contextlib
 
 # import pygraphviz as pgv
 # from pygraph.classes.graph import graph
@@ -90,6 +91,16 @@ class Task(object):
             return self
         else:
             raise TypeError("Cannot add {0} to {1}".format(type(other), type(self)))
+
+    @contextlib.contextmanager
+    def add(self, sub):
+        """ >>> node = Sequence()
+            >>> with node.add(Sequence("first sequence")) as seq:
+            >>>     seq += Task("Do something interesting") 
+        """
+        print("Setting up {0}".format(sub.name))
+        yield sub
+        self.add_child(sub)
 
 class Selector(Task):
     """ A selector runs each task in order until one succeeds,
