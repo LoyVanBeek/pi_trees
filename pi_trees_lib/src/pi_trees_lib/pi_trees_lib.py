@@ -84,6 +84,13 @@ class Task(object):
             return False
         return True
 
+    def __iadd__(self, other):
+        if isinstance(other, Task):
+            self.add_child(other)
+            return self
+        else:
+            raise TypeError("Cannot add {0} to {1}".format(type(other), type(self)))
+
 class Selector(Task):
     """ A selector runs each task in order until one succeeds,
         at which point it returns SUCCESS. If all tasks fail, a FAILURE
