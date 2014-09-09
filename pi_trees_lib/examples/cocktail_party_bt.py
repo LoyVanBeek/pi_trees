@@ -1,14 +1,12 @@
 #! /usr/bin/env python
-# import roslib; roslib.load_manifest("cocktail_party_bt")
-# import rospy
-
+import sys
+sys.path.append("../src") #the examples folder is not in the right folder for the import to work out of the box.
 
 # pi_trees package
 from pi_trees_lib.pi_trees_lib import *
 
 # other imports
 import time
-
 
 ################################# SETUP VARIABLES ######################################
 
@@ -39,23 +37,32 @@ class CocktailPartyBT():
 
 
             ############## Get request from people ##############
-            with COCKTAIL_PARTY.add(Sequence("GET_REQUESTS_sq")) as get_requests:
-                with get_requests.add(Sequence("until enough requests")) as until:
-                    until += Nav("NAV_LIVING_ROOM_t", "Living room", 3)
-                    with until.add(Selector("TAKE_REQUEST_sl")) as take_requests:
-                        take_requests += CheckPendingRequests("CHECK_REQ_t1", knowledge)
-                        take_requests += GetPersonRequest("GET_PERSON_REQ_t", knowledge)
-                    until += CheckPendingRequests("CHECK_REQ_t2", knowledge)
+            # with COCKTAIL_PARTY.add(Sequence("GET_REQUESTS_sq")) as get_requests:
+                # with get_requests.add(Sequence("until enough requests")) as until:
+                #     until += Nav("NAV_LIVING_ROOM_t", "Living room", 3)
+                #     with until.add(Selector("TAKE_REQUEST_sl")) as take_requests:
+                #         take_requests += CheckPendingRequests("CHECK_REQ_t1", knowledge)
+                #         take_requests += GetPersonRequest("GET_PERSON_REQ_t", knowledge)
+                #     until += CheckPendingRequests("CHECK_REQ_t2", knowledge)
+
+            with COCKTAIL_PARTY.add(Selector("collect_orders")) as collect_orders:
+                collect_orders += CheckPendingRequests("CheckPendingRequests_t1", knowledge)
+
+                with collect_orders.add(Sequence("until enough requests")) as until:
+                    with until.add(Sequence("GET_ORDERS_sq")) as get_orders_sq:
+                        get_orders_sq += Nav("NAV_LIVING_ROOM_t", "Living room", 3)
+                        get_orders_sq += GetPersonRequest("GET_PERSON_REQ_t", knowledge)
+                    until += CheckPendingRequests("CheckPendingRequests_t2", knowledge)
             
             ############## Get drinks requested ##############
             with COCKTAIL_PARTY.add(Selector("collect_drinks")) as collect_drinks:
-                collect_drinks += CheckPendingOrders("CheckPendingOrders_t", knowledge)
+                collect_drinks += CheckPendingOrders("CheckPendingOrders_t1", knowledge)
 
                 with collect_drinks.add(Sequence("Until enough collected")) as until:
                     with until.add(Sequence("GET_DRINKS_sq")) as get_drinks_sq:
                         get_drinks_sq += Nav("NAV_KITCHEN_t", "Kitchen", 3)
                         get_drinks_sq += FetchDrinks("FETCH_DRINK_t", knowledge)
-                    until += CheckPendingOrders("CheckPendingOrders_t", knowledge)
+                    until += CheckPendingOrders("CheckPendingOrders_t2", knowledge)
 
             # with COCKTAIL_PARTY.add(RepeatUntilFail(Sequence("While"))) as foreach:
             #     seq = foreach.decorated
