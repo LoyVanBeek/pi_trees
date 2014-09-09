@@ -33,15 +33,11 @@ class ParallelExample():
         BEHAVE = Sequence("behave")
         
         # Create a ParallelOne composite task (returns SUCCESS as soon as any subtask returns SUCCESS)
-        PARALLEL_TASKS = ParallelOne("Counting in Parallel")
-        
-        # Add the tasks to the parallel composite task existing of three counting tasks
-        PARALLEL_TASKS += Count("Count+2", 1, 2, 1)
-        PARALLEL_TASKS += Count("Count-5", 5, 1, -1)
-        PARALLEL_TASKS += Count("Count+16", 1, 16, 1)
-        
-        # Add the composite task to the root task
-        BEHAVE += PARALLEL_TASKS
+        with BEHAVE.add(ParallelOne("Counting in Parallel")) as para:
+            # Add the tasks to the parallel composite task existing of three counting tasks
+            para += Count("Count+2", 1, 2, 1)
+            para += Count("Count-5", 5, 1, -1)
+            para += Count("Count+16", 1, 16, 1)
         
         # Print a simple representation of the tree
         print "Behavior Tree Structure"
