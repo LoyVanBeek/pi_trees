@@ -18,8 +18,9 @@ class Stacks():
         with ROOT_NODE.add(Sequence("stacks")) as stacks:
             with stacks.add(RepeatUntilFail(Sequence("CHECK_AND_POP"))) as _while:
                 passthrough = {}
+                _while += Generate('generate', (i for i in range(10)), passthrough) 
                 #Pop something from 'orders in the global belief state and temporatily store it in the passthrough
-                _while += Pop('pop', 'orders', passthrough) 
+                # _while += Pop('pop', 'orders', passthrough) 
                 _while += Print('print', passthrough) #Print whatever is stored in the passthough for us.
 
         
@@ -53,16 +54,17 @@ class Pop(Task):
             return TaskStatus.FAILURE
 
 class Generate(Task):
-    """Takes some value from the global belief state and stores it in passthrough['temp']"""
+    """Stores 'generator.next()' in passthrough['temp'] and returns SUCCESS or FAILURE on StopIteration"""
     def __init__(self, name, generator, passthrough):
-        super(Pop, self).__init__(name)
+        super(Generate, self).__init__(name)
         self.generator = generator
         self.passthrough = passthrough
 
     def run(self):
         try:
-            print "Stack: {0}".format(beliefs)
-            self.passthrough["temp"] = self.generator.next()
+            current_value = self.generator.next()
+            print "{0.name}: Putting {1} in 'temp'".format(self, current_value)
+            self.passthrough["temp"] = current_value
             return TaskStatus.SUCCESS
         except StopIteration:
             return TaskStatus.FAILURE
@@ -74,6 +76,7 @@ class Print(Task):
         self.passthrough = passthrough
 
     def run(self):
+        print "{0.name}: Retrieving {1} from 'temp'".format(self, self.passthrough["temp"])
         print self.passthrough["temp"]
 
         return TaskStatus.SUCCESS
