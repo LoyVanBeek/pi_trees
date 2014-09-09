@@ -146,18 +146,17 @@ class Nav(Task):
  
     def run(self):
         print "[", self.name, "]", "Run"
-        time.sleep(0.5)
 
-        self.count += 1
-        print "[", self.name, "]", "Navigating to {0}...".format(self.destination)
-
-        # has the robot arrived at the kitchen?
+        # has the robot arrived at the destination?
         if self.count < self.runtime:
+            time.sleep(0.5)
+            self.count += 1
+            print "[", self.name, "]", "Navigating to {0}...".format(self.destination)
             print "[", self.name, "]", "Return RUNNING"
             return TaskStatus.RUNNING
         else:
             print "[", self.name, "]", "Return SUCCESS\n"
-            self.count = 0 #RESET step counter because we arrived, so prepare for next journey
+            #self.count = 0 #RESET step counter because we arrived, so prepare for next journey
             return TaskStatus.SUCCESS
     
     def reset(self):
