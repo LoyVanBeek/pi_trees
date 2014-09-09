@@ -239,7 +239,10 @@ class RepeatUntilFail(Task):
         if result != TaskStatus.FAILURE:
             return TaskStatus.RUNNING
         else:
-            return result
+            return TaskStatus.SUCCESS
+
+    def add_child(self, c):
+        self.decorated.children.append(c)
 
 class invert(Task):
     """"""
