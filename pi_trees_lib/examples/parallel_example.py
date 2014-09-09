@@ -21,6 +21,9 @@
     http://www.gnu.org/licenses/gpl.html
 """
 
+import sys
+sys.path.append("../src") #the examples folder is not in the right folder for the import to work out of the box.
+
 from pi_trees_lib.pi_trees_lib import *
 import time
 
