@@ -7,7 +7,7 @@ from pi_trees_lib.pi_trees_lib import *
 
 import time
 
-#This is the global belief state of the robot. Initially, it believes that there are 10 orders, whatever than means. 
+#This is the global belief state of the robot. Initially, it believes that there are 10 orders, whatever that means. 
 beliefs = {'orders':range(10)}
 
 class Stacks():
@@ -15,11 +15,12 @@ class Stacks():
         # The root node
         ROOT_NODE = Sequence("ROOT_NODE")
         
-        with ROOT_NODE.add(Sequence("beliefss")) as beliefss:
-            with beliefss.add(RepeatUntilFail(Sequence("CHECK_AND_POP"))) as until_fail_check_pop:
+        with ROOT_NODE.add(Sequence("stacks")) as stacks:
+            with stacks.add(RepeatUntilFail(Sequence("CHECK_AND_POP"))) as _while:
                 passthrough = {}
-                until_fail_check_pop += Pop('pop', passthrough)
-                until_fail_check_pop += Print('print', passthrough)
+                #Pop something from 'orders in the global belief state and temporatily store it in the passthrough
+                _while += Pop('pop', 'orders', passthrough) 
+                _while += Print('print', passthrough) #Print whatever is stored in the passthough for us.
 
         
         # Print a simple representation of the tree
@@ -36,26 +37,44 @@ class Stacks():
                 break
 
 class Pop(Task):
-    def __init__(self, name, passthrough):
+    """Takes some value from the global belief state and stores it in passthrough['temp']"""
+    def __init__(self, name, key, passthrough):
         super(Pop, self).__init__(name)
+        self.key = key
         self.passthrough = passthrough
 
     def run(self):
         global beliefs
         try:
             print "Stack: {0}".format(beliefs)
-            self.passthrough["to_print"] = beliefs['orders'].pop()
+            self.passthrough["temp"] = beliefs[self.key].pop()
             return TaskStatus.SUCCESS
         except:
             return TaskStatus.FAILURE
 
+class Generate(Task):
+    """Takes some value from the global belief state and stores it in passthrough['temp']"""
+    def __init__(self, name, generator, passthrough):
+        super(Pop, self).__init__(name)
+        self.generator = generator
+        self.passthrough = passthrough
+
+    def run(self):
+        try:
+            print "Stack: {0}".format(beliefs)
+            self.passthrough["temp"] = self.generator.next()
+            return TaskStatus.SUCCESS
+        except StopIteration:
+            return TaskStatus.FAILURE
+
 class Print(Task):
+    """Prints wehatever is stored in passthrough['temp']"""
     def __init__(self, name, passthrough):
         super(Print, self).__init__(name)
         self.passthrough = passthrough
 
     def run(self):
-        print self.passthrough["to_print"]
+        print self.passthrough["temp"]
 
         return TaskStatus.SUCCESS
 
