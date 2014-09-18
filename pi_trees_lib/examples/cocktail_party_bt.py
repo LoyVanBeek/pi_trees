@@ -41,7 +41,7 @@ class CocktailPartyBT():
             with COCKTAIL_PARTY.add(Sequence("collect_orders")) as collect_orders:
                 with collect_orders.add(RepeatUntilFail(Sequence("CHECK_AND_ASK"))) as _while:
                     _while += invert(CheckPendingRequests("CheckPendingRequests_t2", knowledge)) #Continue if there are pending requests (not yet collected 3)
-                    # _while += CheckHandsWillBeFull("CheckHandsWillBeFull", knowledge) #Continue if we have less than 2 to fill both our hands with
+                    _while += CheckHandsWillBeFull("CheckHandsWillBeFull", knowledge) #Continue if we have less than 2 to fill both our hands with
                     _while += GetPersonRequest("GET_PERSON_REQ_t", knowledge) #Then ask what someone what to drink
             
             ############## Get drinks requested ##############
@@ -95,7 +95,7 @@ class FetchDrinks(Task):
         print "Fetching a drink: a {color}{1} for {0}{end}".format(order[0], order[1], color=green, end=NC)
         
         print "[", self.name, "]", "Return SUCCESS\n"
-        self.knowledge['processed'] += order
+        self.knowledge['processed'] += [(order)]
         return TaskStatus.SUCCESS
     
     def reset(self):
@@ -148,12 +148,12 @@ class CheckHandsWillBeFull(Task):
 
         drinks = self.knowledge['orders']
         processed = self.knowledge['processed']
-        if len(drinks) >= MAX_SIMULTANEOUS_ORDERS:
-            print "I have enough orders ({0}/{1}) to fill my hands, so going to fetch drinks".format(len(drinks), MAX_SIMULTANEOUS_ORDERS)
+        if len(drinks) >= MIN_SIMULTANEOUS_ORDERS:
+            print "I have enough orders ({0}/{1}) to fill my hands, so going to fetch drinks".format(len(drinks), MIN_SIMULTANEOUS_ORDERS)
             print "[", self.name, "]", "Return FAILURE\n"
             return TaskStatus.FAILURE
         else:
-            print "Getting drinks now is not efficient, one hand will be empty: {0}/{1} hands filled".format(len(drinks), MAX_SIMULTANEOUS_ORDERS)
+            print "Getting drinks now is not efficient, one hand will be empty: {0}/{1} hands filled".format(len(drinks), MIN_SIMULTANEOUS_ORDERS)
             print "[", self.name, "]", "Return SUCCESS\n"
             return TaskStatus.SUCCESS
     
@@ -230,13 +230,14 @@ class CheckPendingOrders(Task):
         print "[", self.name, "]", "Run"
         time.sleep(0.5)
 
-        drinks = self.knowledge['orders']
-        if drinks:
-            print "There are still orders to deliver: {0}".format(drinks)
+        processed = self.knowledge['processed']
+        orders = self.knowledge['orders']
+        if len(processed) < MAX_DRINKS_SERVED:
+            print "There are still orders to deliver; processed so far: {0}, pending are {1}".format(processed, orders)
             print "[", self.name, "]", "Return FAILURE\n"
             return TaskStatus.FAILURE
         else:
-            print "All orders are delivered"
+            print "All orders are delivered: {0}".format(processed)
             print "[", self.name, "]", "Return SUCCESS\n"
             return TaskStatus.SUCCESS
     
