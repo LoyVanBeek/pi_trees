@@ -100,7 +100,9 @@ class FetchDrinks(Task):
         time.sleep(0.5)
 
         order = self.knowledge['orders'].pop(0) #orders is a list, here used as a queue. Each item is a tuple
-        print "Fetching a drink: a {1} for {0}".format(order[0], order[1])
+        green ='\033[92m'
+        NC='\033[0m' # No Color
+        print "Fetching a drink: a {color}{1} for {0}{end}".format(order[0], order[1], color=green, end=NC)
         
         print "[", self.name, "]", "Return SUCCESS\n"
         self.knowledge['processed'] += order
@@ -232,17 +234,26 @@ class RepeatUntilFail(Task):
     """
     def __init__(self, task):
         super(RepeatUntilFail, self).__init__(task.name+"repeat_until_fail")
-        self.decorated = task
+        self.children = [task]
  
     def run(self):
-        result = self.decorated.run()
+        result = self.children[0].run()
         if result != TaskStatus.FAILURE:
             return TaskStatus.RUNNING
         else:
             return TaskStatus.SUCCESS
 
     def add_child(self, c):
-        self.decorated.children.append(c)
+        self.children[0].add_child(c)
+
+    def remove_child(self, c):
+        self.children[0].remove_child(c)
+        
+    def prepend_child(self, c):
+        self.children[0].prepend_child(0, c)
+        
+    def insert_child(self, c, i):
+        self.children[0].insert_child(i, c)
 
 class invert(Task):
     """"""
