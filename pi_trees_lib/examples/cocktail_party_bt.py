@@ -37,14 +37,6 @@ class CocktailPartyBT():
 
 
             ############## Get request from people ##############
-            # with COCKTAIL_PARTY.add(Sequence("GET_REQUESTS_sq")) as get_requests:
-                # with get_requests.add(Sequence("until enough requests")) as until:
-                #     until += Nav("NAV_LIVING_ROOM_t", "Living room", 3)
-                #     with until.add(Selector("TAKE_REQUEST_sl")) as take_requests:
-                #         take_requests += CheckPendingRequests("CHECK_REQ_t1", knowledge)
-                #         take_requests += GetPersonRequest("GET_PERSON_REQ_t", knowledge)
-                #     until += CheckPendingRequests("CHECK_REQ_t2", knowledge)
-
             with COCKTAIL_PARTY.add(Selector("collect_orders")) as collect_orders:
                 collect_orders += CheckPendingRequests("CheckPendingRequests_t1", knowledge)
 
