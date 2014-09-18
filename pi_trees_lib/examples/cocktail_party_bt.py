@@ -45,14 +45,11 @@ class CocktailPartyBT():
                     _while += GetPersonRequest("GET_PERSON_REQ_t", knowledge) #Then ask what someone what to drink
             
             ############## Get drinks requested ##############
-            with COCKTAIL_PARTY.add(Selector("collect_drinks")) as collect_drinks:
-                collect_drinks += CheckPendingOrders("CheckPendingOrders_t1", knowledge)
-
-                with collect_drinks.add(Sequence("Until enough collected")) as until:
-                    with until.add(Sequence("GET_DRINKS_sq")) as get_drinks_sq:
-                        get_drinks_sq += Nav("NAV_KITCHEN_t", "Kitchen", 3)
-                        get_drinks_sq += FetchDrinks("FETCH_DRINK_t", knowledge)
-                    until += CheckPendingOrders("CheckPendingOrders_t2", knowledge)
+            COCKTAIL_PARTY += Nav("NAV_KITCHEN_t", "Kitchen", 3)
+            with COCKTAIL_PARTY.add(Sequence("collect_drinks")) as collect_drinks:
+                with collect_drinks.add(RepeatUntilFail(Sequence("CHECK_AND_FETCH"))) as _while:
+                    _while += invert(CheckPendingOrders("CheckPendingOrders_t1", knowledge))
+                    _while += FetchDrinks("FETCH_DRINK_t", knowledge)
 
             # with COCKTAIL_PARTY.add(RepeatUntilFail(Sequence("While"))) as foreach:
             #     seq = foreach.decorated
