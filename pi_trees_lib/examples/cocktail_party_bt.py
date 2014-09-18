@@ -37,14 +37,12 @@ class CocktailPartyBT():
 
 
             ############## Get request from people ##############
-            with COCKTAIL_PARTY.add(Selector("collect_orders")) as collect_orders:
-                collect_orders += CheckPendingRequests("CheckPendingRequests_t1", knowledge)
-
-                with collect_orders.add(Sequence("until enough requests")) as until:
-                    with until.add(Sequence("GET_ORDERS_sq")) as get_orders_sq:
-                        get_orders_sq += Nav("NAV_LIVING_ROOM_t", "Living room", 3)
-                        get_orders_sq += GetPersonRequest("GET_PERSON_REQ_t", knowledge)
-                    until += CheckPendingRequests("CheckPendingRequests_t2", knowledge)
+            COCKTAIL_PARTY += Nav("NAV_LIVING_ROOM_t", "Living room", 3)
+            with COCKTAIL_PARTY.add(Sequence("collect_orders")) as collect_orders:
+                with collect_orders.add(RepeatUntilFail(Sequence("CHECK_AND_ASK"))) as _while:
+                    _while += invert(CheckPendingRequests("CheckPendingRequests_t2", knowledge)) #Continue if there are pending requests (not yet collected 3)
+                    # _while += CheckHandsWillBeFull("CheckHandsWillBeFull", knowledge) #Continue if we have less than 2 to fill both our hands with
+                    _while += GetPersonRequest("GET_PERSON_REQ_t", knowledge) #Then ask what someone what to drink
             
             ############## Get drinks requested ##############
             with COCKTAIL_PARTY.add(Selector("collect_drinks")) as collect_drinks:
@@ -133,6 +131,34 @@ class CheckPendingRequests(Task):
     def reset(self):
         print "[", self.name, "]", "Reset"
 
+#########################################################################
+
+class CheckHandsWillBeFull(Task):
+    def __init__(self, name, knowledge, *args, **kwargs):
+        super(CheckHandsWillBeFull, self).__init__(name, *args, **kwargs)
+        
+        self.name = name
+        self.knowledge = knowledge
+
+        print "[", self.name, "]", "Creating task"
+ 
+    def run(self):
+        print "[", self.name, "]", "Run"
+        time.sleep(0.5)
+
+        drinks = self.knowledge['orders']
+        processed = self.knowledge['processed']
+        if len(drinks) >= MAX_SIMULTANEOUS_ORDERS:
+            print "I have enough orders ({0}/{1}) to fill my hands, so going to fetch drinks".format(len(drinks), MAX_SIMULTANEOUS_ORDERS)
+            print "[", self.name, "]", "Return FAILURE\n"
+            return TaskStatus.FAILURE
+        else:
+            print "Getting drinks now is not efficient, one hand will be empty: {0}/{1} hands filled".format(len(drinks), MAX_SIMULTANEOUS_ORDERS)
+            print "[", self.name, "]", "Return SUCCESS\n"
+            return TaskStatus.SUCCESS
+    
+    def reset(self):
+        print "[", self.name, "]", "Reset"
 #########################################################################
 
 class Nav(Task):
